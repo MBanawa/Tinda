@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:tinda/View/home_page.dart';
 
+
 void main() => runApp(MainApp());
 
 class MainApp extends StatefulWidget {
@@ -11,8 +12,8 @@ class MainApp extends StatefulWidget {
 class _MainAppState extends State<MainApp> {
   @override
   Widget build(BuildContext context) {
+    
 //return MaterialApp, Setup Theme Settings, Call Homepage
-
     return MaterialApp(
       debugShowCheckedModeBanner: false,
       theme: ThemeData(

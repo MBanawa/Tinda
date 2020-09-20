@@ -1,0 +1,238 @@
+import 'package:flutter/material.dart';
+import 'package:tinda/Model/Inventory_model/categories.dart';
+import 'package:tinda/Service/category_service.dart';
+import 'package:tinda/View/barcode.dart';
+import 'package:tinda/Widgets/Inventory.dart';
+
+class ListCategories extends StatefulWidget {
+  @override
+  _ListCategoriesState createState() => _ListCategoriesState();
+}
+
+class _ListCategoriesState extends State<ListCategories> {
+  var _categoryNameController = TextEditingController();
+  var _categoryDescriptionController = TextEditingController();
+
+  var _category = Category();
+  var _categoryService = CategoryService();
+
+  List<Category> _categoryList = List<Category>();
+
+  @override
+  void initState() {
+    super.initState();
+    getAllCategories();
+  }
+
+  getAllCategories() async {
+    _categoryList = List<Category>();
+    var categories = await _categoryService.readCategories();
+    categories.forEach((category) {
+      setState(() {
+        var categoryModel = Category();
+        categoryModel.name = category['name'];
+        categoryModel.description = category['description'];
+        categoryModel.id = category['id'];
+        _categoryList.add(categoryModel);
+      });
+    });
+  }
+
+  //Dropdown Menu
+  DropDownList _dropDownList() => DropDownList();
+
+  //pop-up dialog to select scan or new item:
+  _scanDialog(BuildContext context) {
+    return showDialog(
+        context: context,
+        barrierDismissible: true,
+        builder: (param) {
+          return AlertDialog(
+            title: Text('Create New Item'),
+            content: SingleChildScrollView(
+              child: Column(
+                children: [
+                  RaisedButton(
+                      child: Text('Scan Now'),
+                      onPressed: () {
+                        Navigator.pop(context, 'Scan');
+                        Navigator.push(context,
+                            MaterialPageRoute(builder: (context) => Barcode()));
+                      }),
+                  SizedBox(height: 10.0),
+                  Text(
+                    'OR',
+                    style: TextStyle(
+                      fontWeight: FontWeight.bold,
+                    ),
+                  ),
+                  SizedBox(height: 10.0),
+                  RaisedButton(
+                      child: Text('Create item without Barcode'),
+                      onPressed: () {
+                        Navigator.pop(context, 'GetCategory');
+                      }),
+                ],
+              ),
+            ),
+          );
+        });
+  }
+
+  //pop-up dialog to select category:
+  _selectionDialog(BuildContext context) {
+    return showDialog(
+        context: context,
+        barrierDismissible: true,
+        builder: (param) {
+          return AlertDialog(
+            actions: [
+              FlatButton(
+                onPressed: () {
+                  Navigator.pop(context);
+                },
+                child: Text('Save'),
+              ),
+              FlatButton(
+                onPressed: () {
+                  Navigator.pop(context);
+                },
+                child: Text('Cancel'),
+              ),
+            ],
+            title: Text('Please Select A Category'),
+            content: SingleChildScrollView(
+              child: Column(
+                children: [
+                  _dropDownList(),
+                  SizedBox(height: 10.0),
+                  Text(
+                    'OR',
+                    style: TextStyle(
+                      fontWeight: FontWeight.bold,
+                    ),
+                  ),
+                  SizedBox(height: 10.0),
+                  RaisedButton(
+                      child: Text('Create a new Category'),
+                      onPressed: () {
+                        Navigator.pop(context, 'NewCategory');
+                        _newCategoryDialog(context);
+                      }),
+                ],
+              ),
+            ),
+          );
+        });
+  }
+
+  //pop-up dialog to create new category:
+  _newCategoryDialog(BuildContext context) {
+    return showDialog(
+        context: context,
+        barrierDismissible: true,
+        builder: (param) {
+          return AlertDialog(
+            actions: [
+              FlatButton(
+                onPressed: () {
+                  Navigator.pop(context);
+                },
+                color: Colors.red,
+                child: Text('Cancel'),
+              ),
+              FlatButton(
+                color: Colors.green,
+                child: Text('Save'),
+                onPressed: () async {
+                  Navigator.pop(context, 'refresh');
+                  _category.name = _categoryNameController.text;
+                  _category.description = _categoryDescriptionController.text;
+                  var result = await _categoryService.saveCategory(_category);
+                },
+              ),
+            ],
+            title: Text('Create New Category'),
+            content: SingleChildScrollView(
+                child: Column(
+              children: [
+                TextField(
+                  controller: _categoryNameController,
+                  decoration: InputDecoration(
+                    hintText: 'Write a Category',
+                    labelText: 'Category',
+                  ),
+                ),
+                TextField(
+                  controller: _categoryDescriptionController,
+                  decoration: InputDecoration(
+                    hintText: 'Write a Description',
+                    labelText: 'Description',
+                  ),
+                ),
+              ],
+            )),
+          );
+        });
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    return Scaffold(
+      floatingActionButton: FloatingActionButton(
+        child: Icon(Icons.add),
+        onPressed: () {
+          _scanDialog(context).then((value) {
+            if (value == 'GetCategory') {
+              _selectionDialog(context);
+            }
+          });
+        },
+      ),
+      appBar: AppBar(
+        leading: Icon(
+          Icons.store,
+          size: 30,
+        ),
+        title: Text('Inventory Manager'),
+      ),
+      body: ListView.builder(
+          itemCount: _categoryList.length,
+          itemBuilder: (context, index) {
+            return Card(
+              elevation: 2,
+              child: ListTile(
+                leading: Image.asset(
+                  'assets/chichirya.jpg',
+                ),
+                title: Row(
+                  mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                  children: <Widget>[
+                    Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        Text(
+                          _categoryList[index].name,
+                          style: TextStyle(
+                            fontSize: 20.0,
+                            color: Colors.teal.shade900,
+                          ),
+                        ),
+                        Text(
+                          _categoryList[index].description,
+                          style: TextStyle(
+                            fontSize: 16.0,
+                            color: Colors.grey.shade500,
+                          ),
+                        ),
+                      ],
+                    ),
+                    Icon(Icons.more_vert),
+                  ],
+                ),
+              ),
+            );
+          }),
+    );
+  }
+}

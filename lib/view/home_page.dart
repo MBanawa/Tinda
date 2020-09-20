@@ -46,7 +46,7 @@ class _HomePageState extends State<HomePage> {
         color: Colors.teal,
         backgroundColor: Colors.grey.shade200,
         buttonBackgroundColor: Colors.yellow.shade900,
-        animationCurve: Curves.easeInOut,
+        animationCurve: Curves.easeIn,
         animationDuration: Duration(milliseconds: 200),
         onTap: _onItemTapped,
         //create buildFaIcon widget with preset size and color for cleaner code

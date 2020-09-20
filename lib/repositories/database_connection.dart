@@ -2,7 +2,7 @@ import 'package:sqflite/sqflite.dart';
 import 'package:path/path.dart';
 import 'package:path_provider/path_provider.dart';
 
-
+//CREATE DATABASE and CREATE TABLE inside the database
 
 class DatabaseConnection{
   setDatabse() async {
