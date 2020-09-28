@@ -1,9 +1,12 @@
 import 'package:flutter/material.dart';
+import 'dart:async';
+import 'package:flutter/services.dart';
+import 'package:flutter_barcode_scanner/flutter_barcode_scanner.dart';
 
 import 'package:tinda/Model/Inventory_model/categories.dart';
 import 'package:tinda/Service/category_service.dart';
-import 'package:tinda/View/barcode.dart';
 import 'package:tinda/Widgets/Inventory.dart';
+import 'package:tinda/view/Inventory/item_screen.dart';
 import 'package:tinda/widgets/menu_item.dart';
 
 class ListCategories extends StatefulWidget {
@@ -24,12 +27,39 @@ class _ListCategoriesState extends State<ListCategories> {
 
   var _editCategoryNameController = TextEditingController();
   var _editCategoryDescriptionController = TextEditingController();
+  String selectedItem;
+  String _scanBarcode = '';
 
   @override
   void initState() {
     super.initState();
     getAllCategories();
   }
+
+  //~~~~~~~~~~~~~~BARCODE~~~~~~~~~~~~~~~~~~
+  Future<void> scanBarcodeNormal() async {
+    String barcodeScanRes;
+    // Platform messages may fail, so we use a try/catch PlatformException.
+    try {
+      barcodeScanRes = await FlutterBarcodeScanner.scanBarcode(
+          "#ff6666", "Cancel", true, ScanMode.BARCODE);
+      print(barcodeScanRes);
+    } on PlatformException {
+      barcodeScanRes = 'Failed to get platform version.';
+    }
+
+    // If the widget was removed from the tree while the asynchronous platform
+    // message was in flight, we want to discard the reply rather than calling
+    // setState to update our non-existent appearance.
+    if (!mounted) return;
+
+    setState(() {
+      _scanBarcode = barcodeScanRes;
+    });
+  }
+  //~~~~~~~~~~~~~~BARCODE~~~~~~~~~~~~~~~~~~
+
+  final GlobalKey<ScaffoldState> _globalKey = GlobalKey<ScaffoldState>();
 
   getAllCategories() async {
     _categoryList = List<Category>();
@@ -56,7 +86,12 @@ class _ListCategoriesState extends State<ListCategories> {
   }
 
   //Dropdown Menu
-  DropDownList _dropDownList() => DropDownList();
+  String _selectedValue;
+  DropDownList _dropDownList() => DropDownList(
+        onChanged: (value) {
+          _selectedValue = value;
+        },
+      );
 
   //pop-up dialog to select scan or new item:
   _scanDialog(BuildContext context) {
@@ -70,11 +105,14 @@ class _ListCategoriesState extends State<ListCategories> {
               child: Column(
                 children: [
                   RaisedButton(
-                      child: Text('Scan Now'),
+                      child: Text('Scan Barcode Now'),
                       onPressed: () {
                         Navigator.pop(context, 'Scan');
-                        Navigator.push(context,
-                            MaterialPageRoute(builder: (context) => Barcode()));
+                        scanBarcodeNormal()
+                            .then((value) => _selectionDialog(context));
+
+                        // Navigator.push(context,
+                        //     MaterialPageRoute(builder: (context) => Barcode()));
                       }),
                   SizedBox(height: 10.0),
                   Text(
@@ -88,6 +126,7 @@ class _ListCategoriesState extends State<ListCategories> {
                       child: Text('Create item without Barcode'),
                       onPressed: () {
                         Navigator.pop(context, 'GetCategory');
+                        _scanBarcode = null;
                       }),
                 ],
               ),
@@ -105,19 +144,32 @@ class _ListCategoriesState extends State<ListCategories> {
           return AlertDialog(
             actions: [
               FlatButton(
+                
                 onPressed: () {
                   Navigator.pop(context);
                 },
-                child: Text('Save'),
+                child: Text('Cancel',
+                style: TextStyle(
+                  color: Colors.grey,
+                ),
+                ),
               ),
               FlatButton(
+                color: Colors.blue,
                 onPressed: () {
                   Navigator.pop(context);
+                  Navigator.of(context).push(MaterialPageRoute(
+                      builder: (context) => ItemScreen(
+                            category: _selectedValue,
+                            barcode: _scanBarcode,
+                          )));
                 },
-                child: Text('Cancel'),
+                child: Text('Continue'),
               ),
             ],
-            title: Text('Please Select A Category'),
+            title: Text(_scanBarcode != null
+                ? 'Please Select a Category for $_scanBarcode'
+                : 'Please Select a Category'),
             content: SingleChildScrollView(
               child: Column(
                 children: [
@@ -170,6 +222,12 @@ class _ListCategoriesState extends State<ListCategories> {
                     getAllCategories();
                     _categoryNameController.clear();
                     _categoryDescriptionController.clear();
+                    _showSuccessSnackBar(
+                      Text('Category Successfully Added!'),
+                    );
+                    Navigator.of(context).push(MaterialPageRoute(
+                        builder: (context) =>
+                            ItemScreen(category: _category.name)));
                   }
                 },
               ),
@@ -198,15 +256,62 @@ class _ListCategoriesState extends State<ListCategories> {
         });
   }
 
-   _temporaryDialog(BuildContext context) {
+  // _temporaryDialog(BuildContext context) {
+  //   return showDialog(
+  //       context: context,
+  //       barrierDismissible: true,
+  //       builder: (param) {
+  //         return AlertDialog(
+  //           title: Text('Scan Result'),
+  //           content: Stack(
+
+  //             children: [
+  //               Text(_scanBarcode),
+  //             ],
+
+  //           ),
+
+  //         );
+  //       });
+  // }
+
+  _deleteCategoryDialog(BuildContext context, categoryId) {
     return showDialog(
         context: context,
         barrierDismissible: true,
         builder: (param) {
           return AlertDialog(
+            actions: [
+              FlatButton(
+                onPressed: () {
+                  Navigator.pop(context);
+                },
+                color: Colors.blue,
+                child: Text('Cancel'),
+              ),
+              FlatButton(
+                color: Colors.red,
+                child: Text('Delete'),
+                onPressed: () async {
+                  var result =
+                      await _categoryService.deleteCategory(categoryId);
+                  if (result > 0) {
+                    Navigator.pop(context, 'Delete');
+                    getAllCategories();
 
-            title: Text('ARE YOU SURE YOU WANT TO DELETE?'),
-
+                    _showDeleteSnackBar(
+                      Text('Category Successfully Deleted.'),
+                    );
+                  }
+                },
+              ),
+            ],
+            title: Text('Are you sure you want to delete this Category?'),
+            content: Stack(
+              children: [
+                Text('All items in this Category will lose their Category'),
+              ],
+            ),
           );
         });
   }
@@ -236,10 +341,11 @@ class _ListCategoriesState extends State<ListCategories> {
                       _editCategoryDescriptionController.text;
                   var result = await _categoryService.updateCategory(_category);
                   if (result > 0) {
-                    Navigator.pop(context, 'refresh');
+                    Navigator.pop(context);
                     getAllCategories();
-                    // _categoryNameController.clear();
-                    // _categoryDescriptionController.clear();
+                    _showSuccessSnackBar(
+                      Text('Category Successfully Updated!'),
+                    );
                   }
                 },
               ),
@@ -268,12 +374,28 @@ class _ListCategoriesState extends State<ListCategories> {
         });
   }
 
+  _showSuccessSnackBar(message) {
+    var _snackBar = SnackBar(
+      content: message,
+      backgroundColor: Colors.green.shade700,
+      duration: const Duration(milliseconds: 1000),
+    );
+    _globalKey.currentState.showSnackBar(_snackBar);
+  }
 
-  
+  _showDeleteSnackBar(message) {
+    var _snackBar = SnackBar(
+      content: message,
+      backgroundColor: Colors.red.shade800,
+      duration: const Duration(milliseconds: 1000),
+    );
+    _globalKey.currentState.showSnackBar(_snackBar);
+  }
 
   @override
   Widget build(BuildContext context) {
     return Scaffold(
+      key: _globalKey,
       floatingActionButton: FloatingActionButton(
         child: Icon(Icons.add),
         onPressed: () {
@@ -341,15 +463,13 @@ class _ListCategoriesState extends State<ListCategories> {
                           ),
                         ),
                         PopupMenuButton(onSelected: (MenuItem menuItem) {
-                          
-                          if(menuItem.menuVal == "Edit"){
+                          if (menuItem.menuVal == "Edit") {
                             _editCategory(context, _categoryList[index].id);
                           } else if (menuItem.menuVal == "Delete") {
-                            _temporaryDialog(context);
+                            _deleteCategoryDialog(
+                                context, _categoryList[index].id);
                           }
-                          
-                        }, 
-                        itemBuilder: (BuildContext context) {
+                        }, itemBuilder: (BuildContext context) {
                           return menuitems.map((MenuItem menuItem) {
                             return PopupMenuItem(
                               value: menuItem,
@@ -364,7 +484,6 @@ class _ListCategoriesState extends State<ListCategories> {
                             );
                           }).toList();
                         }),
-
                       ],
                     ),
                   ),

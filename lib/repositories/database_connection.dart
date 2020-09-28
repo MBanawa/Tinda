@@ -13,7 +13,16 @@ class DatabaseConnection{
   }
 
   _onCreatingDatabase(Database database, int version) async {
+
+
+    //Create Categories Table
     await database.execute("CREATE TABLE categories(id INTEGER PRIMARY KEY, name TEXT, description TEXT)");
+
+    //Create Items Table
+    await database.execute("CREATE TABLE items(id INTEGER PRIMARY KEY, createdDate TEXT,  barcode TEXT, name TEXT, quantity INTEGER, category TEXT, buyDate TEXT, supplier TEXT, buyPrice REAL, sellPrice REAL, image TEXT)");
+
+
   }
 
+    
 }
