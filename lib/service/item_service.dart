@@ -1,5 +1,5 @@
 import 'package:tinda/repositories/repository.dart';
-import 'package:tinda/model/inventory_model/items.dart';
+import 'package:tinda/model/items.dart';
 
 
 

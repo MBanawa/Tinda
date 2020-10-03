@@ -3,7 +3,7 @@ import 'dart:async';
 import 'package:flutter/services.dart';
 import 'package:flutter_barcode_scanner/flutter_barcode_scanner.dart';
 
-import 'package:tinda/Model/Inventory_model/categories.dart';
+import 'package:tinda/Model/categories.dart';
 import 'package:tinda/Service/category_service.dart';
 import 'package:tinda/Widgets/Inventory.dart';
 import 'package:tinda/view/Inventory/item_screen.dart';
@@ -110,9 +110,6 @@ class _ListCategoriesState extends State<ListCategories> {
                         Navigator.pop(context, 'Scan');
                         scanBarcodeNormal()
                             .then((value) => _selectionDialog(context));
-
-                        // Navigator.push(context,
-                        //     MaterialPageRoute(builder: (context) => Barcode()));
                       }),
                   SizedBox(height: 10.0),
                   Text(
@@ -144,14 +141,14 @@ class _ListCategoriesState extends State<ListCategories> {
           return AlertDialog(
             actions: [
               FlatButton(
-                
                 onPressed: () {
                   Navigator.pop(context);
                 },
-                child: Text('Cancel',
-                style: TextStyle(
-                  color: Colors.grey,
-                ),
+                child: Text(
+                  'Cancel',
+                  style: TextStyle(
+                    color: Colors.grey,
+                  ),
                 ),
               ),
               FlatButton(
@@ -226,8 +223,10 @@ class _ListCategoriesState extends State<ListCategories> {
                       Text('Category Successfully Added!'),
                     );
                     Navigator.of(context).push(MaterialPageRoute(
-                        builder: (context) =>
-                            ItemScreen(category: _category.name)));
+                        builder: (context) => ItemScreen(
+                              category: _category.name,
+                              barcode: _scanBarcode,
+                            )));
                   }
                 },
               ),

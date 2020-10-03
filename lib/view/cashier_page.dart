@@ -1,5 +1,8 @@
+import 'dart:typed_data';
+
 import 'package:flutter/material.dart';
 import 'package:tinda/view/Inventory/item_screen.dart';
+
 
 class ShowCashier extends StatefulWidget {
   @override
@@ -12,9 +15,12 @@ class _ShowCashierState extends State<ShowCashier> {
     return Scaffold(
       floatingActionButton: FloatingActionButton(
         child: Icon(Icons.add),
-        onPressed: (){}
-        //  =>  Navigator.of(context)
-        //     .push(MaterialPageRoute(builder: (context) => ItemScreen()))
+        onPressed: (){
+
+        //   Navigator.push(context,
+        //                     MaterialPageRoute(builder: (context) => Int32x4.xxxx()));
+        }
+
             
         ),
 
