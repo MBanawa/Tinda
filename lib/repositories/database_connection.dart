@@ -16,7 +16,7 @@ class DatabaseConnection{
 
 
     //Create Categories Table
-    await database.execute("CREATE TABLE categories(id INTEGER PRIMARY KEY, name TEXT, description TEXT)");
+    await database.execute("CREATE TABLE categories(id INTEGER PRIMARY KEY, name TEXT, description TEXT, catcolor INTEGER)");
 
     //Create Items Table
     await database.execute("CREATE TABLE items(id INTEGER PRIMARY KEY, createdDate TEXT,  barcode TEXT, name TEXT, quantity INTEGER, category TEXT, buyDate TEXT, supplier TEXT, buyPrice REAL, sellPrice REAL, image TEXT)");

@@ -2,11 +2,13 @@ import 'package:flutter/material.dart';
 import 'dart:async';
 import 'package:flutter/services.dart';
 import 'package:flutter_barcode_scanner/flutter_barcode_scanner.dart';
+import 'package:flutter_colorpicker/flutter_colorpicker.dart';
 
 import 'package:tinda/Model/categories.dart';
 import 'package:tinda/Service/category_service.dart';
 import 'package:tinda/Widgets/Inventory.dart';
 import 'package:tinda/view/Inventory/item_screen.dart';
+import 'package:tinda/view/Inventory/items_by_category.dart';
 import 'package:tinda/widgets/menu_item.dart';
 
 class ListCategories extends StatefulWidget {
@@ -29,6 +31,21 @@ class _ListCategoriesState extends State<ListCategories> {
   var _editCategoryDescriptionController = TextEditingController();
   String selectedItem;
   String _scanBarcode = '';
+
+  //~~~~~~~~~~Colorpicker
+  Color pickerColor = Color(0xff443a49);
+  Color currentColor = Color(0xff443a49);
+  int categcolor;
+
+  // ValueChanged<Color> callback
+  void changeColor(Color color) {
+    setState(() {
+      pickerColor = color;
+      int colorInt = pickerColor.value;
+      categcolor = colorInt;
+      print(colorInt);
+    });
+  }
 
   @override
   void initState() {
@@ -70,6 +87,7 @@ class _ListCategoriesState extends State<ListCategories> {
         categoryModel.name = category['name'];
         categoryModel.description = category['description'];
         categoryModel.id = category['id'];
+        categoryModel.catcolor = category['catcolor'];
         _categoryList.add(categoryModel);
       });
     });
@@ -213,6 +231,7 @@ class _ListCategoriesState extends State<ListCategories> {
                 onPressed: () async {
                   _category.name = _categoryNameController.text;
                   _category.description = _categoryDescriptionController.text;
+                  _category.catcolor = categcolor;
                   var result = await _categoryService.saveCategory(_category);
                   if (result > 0) {
                     Navigator.pop(context, 'refresh');
@@ -232,25 +251,45 @@ class _ListCategoriesState extends State<ListCategories> {
               ),
             ],
             title: Text('Create New Category'),
-            content: SingleChildScrollView(
-                child: Column(
+            content: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
               children: [
                 TextField(
+                  textInputAction: TextInputAction.next,
                   controller: _categoryNameController,
+                  onSubmitted: (_) => FocusScope.of(context).nextFocus(),
                   decoration: InputDecoration(
                     hintText: 'Write a Category',
                     labelText: 'Category',
                   ),
                 ),
                 TextField(
+                  textInputAction: TextInputAction.next,
                   controller: _categoryDescriptionController,
+                  onSubmitted: (_) => FocusScope.of(context).nextFocus(),
                   decoration: InputDecoration(
                     hintText: 'Write a Description',
                     labelText: 'Description',
                   ),
                 ),
+                SizedBox(
+                  height: 12,
+                ),
+                Text(
+                  'Select a Color for your Category',
+                  style: TextStyle(color: Colors.grey.shade600),
+                ),
+                Expanded(
+                  flex: 1,
+                  child: Container(
+                    child: BlockPicker(
+                      pickerColor: pickerColor,
+                      onColorChanged: changeColor,
+                    ),
+                  ),
+                ),
               ],
-            )),
+            ),
           );
         });
   }
@@ -338,6 +377,7 @@ class _ListCategoriesState extends State<ListCategories> {
                   _category.name = _editCategoryNameController.text;
                   _category.description =
                       _editCategoryDescriptionController.text;
+
                   var result = await _categoryService.updateCategory(_category);
                   if (result > 0) {
                     Navigator.pop(context);
@@ -394,6 +434,7 @@ class _ListCategoriesState extends State<ListCategories> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
+      // resizeToAvoidBottomPadding: false,
       key: _globalKey,
       floatingActionButton: FloatingActionButton(
         child: Icon(Icons.add),
@@ -416,98 +457,85 @@ class _ListCategoriesState extends State<ListCategories> {
           physics: BouncingScrollPhysics(),
           itemCount: _categoryList.length,
           itemBuilder: (context, index) {
-            return Stack(
-              children: <Widget>[
-                Container(
-                  margin: EdgeInsets.fromLTRB(20.0, 5.0, 20.0, 5.0),
-                  height: 70.0,
-                  width: double.infinity,
-                  decoration: BoxDecoration(
-                    boxShadow: [
-                      BoxShadow(
-                        color: Colors.grey,
-                        offset: Offset(1.0, 2.0),
-                        blurRadius: 4.0,
-                      ),
-                    ],
-                    color: Colors.white,
-                    borderRadius: BorderRadius.circular(5.0),
-                  ),
-                  child: Padding(
-                    padding: const EdgeInsets.fromLTRB(80.0, 5.0, 5.0, 5.0),
-                    child: Row(
-                      mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                      children: <Widget>[
-                        Expanded(
-                          child: Column(
-                            mainAxisAlignment: MainAxisAlignment.center,
-                            crossAxisAlignment: CrossAxisAlignment.start,
-                            children: [
-                              Text(
-                                _categoryList[index].name,
-                                style: TextStyle(
-                                  fontSize: 22.0,
-                                  color: Colors.teal.shade800,
-                                ),
-                              ),
-                              // SizedBox(height: 5.0),
-                              Text(
-                                _categoryList[index].description,
-                                style: TextStyle(
-                                  fontSize: 12.0,
-                                  color: Colors.orange.shade200,
-                                ),
-                              ),
-                            ],
-                          ),
+            return Card(
+              margin: EdgeInsets.fromLTRB(8, 8, 8, 0),
+              elevation: 3,
+              child: InkWell(
+                splashColor: Colors.teal.withAlpha(80),
+                onTap: () {
+                  Navigator.of(context).push(MaterialPageRoute(
+                      builder: (context) => ItemsByCategory(
+                          category: _categoryList[index].name)));
+                },
+                child: Container(
+                  child: Stack(
+                    children: <Widget>[
+                      Container(
+                        width: 6,
+                        height: 65,
+                        decoration: BoxDecoration(
+                          borderRadius: BorderRadius.only(
+                              topLeft: Radius.circular(4),
+                              bottomLeft: Radius.circular(4)),
+                          color: Color(_categoryList[index].catcolor),
                         ),
-                        PopupMenuButton(onSelected: (MenuItem menuItem) {
-                          if (menuItem.menuVal == "Edit") {
-                            _editCategory(context, _categoryList[index].id);
-                          } else if (menuItem.menuVal == "Delete") {
-                            _deleteCategoryDialog(
-                                context, _categoryList[index].id);
-                          }
-                        }, itemBuilder: (BuildContext context) {
-                          return menuitems.map((MenuItem menuItem) {
-                            return PopupMenuItem(
-                              value: menuItem,
-                              child: Row(
-                                mainAxisAlignment:
-                                    MainAxisAlignment.spaceBetween,
+                      ),
+                      Padding(
+                        padding: const EdgeInsets.fromLTRB(16.0, 8, 0, 0),
+                        child: Row(
+                          mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                          children: <Widget>[
+                            Expanded(
+                              child: Column(
+                                mainAxisAlignment: MainAxisAlignment.center,
+                                crossAxisAlignment: CrossAxisAlignment.start,
                                 children: [
-                                  Icon(menuItem.iconVal),
-                                  Text(menuItem.menuVal),
+                                  Text(
+                                    _categoryList[index].name,
+                                    style: TextStyle(
+                                      fontSize: 22.0,
+                                      color: Colors.teal.shade800,
+                                    ),
+                                  ),
+                                  Text(
+                                    '${_categoryList[index].description}',
+                                    style: TextStyle(
+                                      fontSize: 12.0,
+                                      color: Colors.orange.shade400,
+                                    ),
+                                  ),
                                 ],
                               ),
-                            );
-                          }).toList();
-                        }),
-                      ],
-                    ),
-                  ),
-                ),
-                Positioned(
-                  left: 22,
-                  top: 7.3,
-                  bottom: 7,
-                  child: Container(
-                    child: ClipRRect(
-                      borderRadius: BorderRadius.only(
-                        topLeft: Radius.circular(5),
-                        bottomLeft: Radius.circular(5),
-                      ),
-                      child: Image(
-                        width: 70.0,
-                        image: NetworkImage(
-                          'https://picsum.photos/250?image=$index',
+                            ),
+                            PopupMenuButton(onSelected: (MenuItem menuItem) {
+                              if (menuItem.menuVal == "Edit") {
+                                _editCategory(context, _categoryList[index].id);
+                              } else if (menuItem.menuVal == "Delete") {
+                                _deleteCategoryDialog(
+                                    context, _categoryList[index].id);
+                              }
+                            }, itemBuilder: (BuildContext context) {
+                              return menuitems.map((MenuItem menuItem) {
+                                return PopupMenuItem(
+                                  value: menuItem,
+                                  child: Row(
+                                    mainAxisAlignment:
+                                        MainAxisAlignment.spaceBetween,
+                                    children: [
+                                      Icon(menuItem.iconVal),
+                                      Text(menuItem.menuVal),
+                                    ],
+                                  ),
+                                );
+                              }).toList();
+                            }),
+                          ],
                         ),
-                        fit: BoxFit.cover,
                       ),
-                    ),
+                    ],
                   ),
                 ),
-              ],
+              ),
             );
           }),
     );

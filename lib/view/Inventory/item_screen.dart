@@ -1,12 +1,16 @@
 import 'package:flutter/material.dart';
 import 'package:image_picker/image_picker.dart';
-import 'package:path_provider/path_provider.dart';
+import 'package:path_provider/path_provider.dart' as pPath;
 import 'package:intl/intl.dart';
-import 'package:path/path.dart';
+import 'package:path/path.dart' as pathx;
 import 'dart:async';
 import 'dart:io';
+import 'package:provider/provider.dart';
 
 import 'package:tinda/model/items.dart';
+import 'package:tinda/model/picture.dart';
+import 'package:tinda/service/item_service.dart';
+import 'package:tinda/widgets/pictures_provider.dart';
 
 class ItemScreen extends StatefulWidget {
   // final Item item;
@@ -70,19 +74,19 @@ class _ItemScreenState extends State<ItemScreen> {
 
   File _image;
   final _picker = ImagePicker();
-  
 
   void getImage() async {
     final pickedFile = await _picker.getImage(source: ImageSource.camera);
-    
 
     setState(() {
       if (pickedFile != null) {
         _image = File(pickedFile.path);
+        print(pickedFile.path);
       } else {
         print('No image selected.');
       }
     });
+    pathSave();
   }
 
   void getImageGallery() async {
@@ -95,6 +99,20 @@ class _ItemScreenState extends State<ItemScreen> {
         print('No image selected.');
       }
     });
+    pathSave();
+  }
+
+  void pathSave() async {
+    final appDir = await pPath.getApplicationDocumentsDirectory();
+    final fileName = pathx.basename(_image.path);
+    final savedImage = await _image.copy('${appDir.path}/$fileName');
+
+    var _imageToStore = Picture(picName: savedImage);
+    _storeImage() {
+      Provider.of<Pictures>(context, listen: false).storeImage(_imageToStore);
+    }
+
+    _storeImage();
   }
 
   void _showPicker(context) {
@@ -160,9 +178,8 @@ class _ItemScreenState extends State<ItemScreen> {
                             child: _image != null
                                 ? ClipRRect(
                                     borderRadius: BorderRadius.circular(70.0),
-                                    child: Image.file(_image,
-                                    
-                                        fit: BoxFit.contain),
+                                    child:
+                                        Image.file(_image, fit: BoxFit.contain),
                                   )
                                 : Container(
                                     child: Icon(
@@ -195,7 +212,7 @@ class _ItemScreenState extends State<ItemScreen> {
                       focusNode: focusNode,
                       decoration: InputDecoration(
                         labelText: 'Type item name here',
-                        hintText: 'Where did you buy the item?',
+                        hintText: 'What\'s the name of this Item?',
                       ),
                     ),
                     TextFormField(
@@ -256,11 +273,39 @@ class _ItemScreenState extends State<ItemScreen> {
             ),
           ),
           GestureDetector(
-            onTap: () {},
+            onTap: () async {
+              var itemObject = Item();
+              itemObject.createdDate = DateTime.now().toString();
+              itemObject.barcode = barcode;
+              itemObject.name = _itemNameController.text;
+              itemObject.category = category;
+              itemObject.quantity = int.parse(_itemQuantityController.text);
+              itemObject.buyDate = _itemBuyDateController.text;
+              itemObject.supplier = _itemSupplierController.text;
+              itemObject.buyPrice = double.parse(_itemBuyPriceController.text);
+              itemObject.sellPrice = double.parse(_itemSellPriceController.text);
+              // itemObject.image = null;
+
+              var _itemService = ItemService();
+              var result = await _itemService.saveItem(itemObject);
+              if (result > 0 ) {
+                Navigator.pop(context, 'itemsaved');
+              }
+
+              print(DateTime.now().toString());
+              print(barcode);
+              print(_itemNameController.text);
+              print(category);
+              print(int.parse(_itemQuantityController.text));
+              print(_itemBuyDateController.text);
+              print(_itemSupplierController.text);
+              print(double.parse(_itemBuyPriceController.text));
+              print(double.parse(_itemSellPriceController.text));
+            },
             child: Container(
               color: Colors.teal,
               width: double.infinity,
-              height: 70.0,
+              height: 50.0,
               child: Center(
                 child: Text(
                   'Save',
