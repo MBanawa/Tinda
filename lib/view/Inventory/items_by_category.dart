@@ -1,10 +1,13 @@
 import 'package:flutter/material.dart';
 import 'package:tinda/model/items.dart';
 import 'package:tinda/service/item_service.dart';
+import 'package:tinda/view/Inventory/item_screen.dart';
+import 'package:tinda/view/Inventory/new_item_screen.dart';
 
 class ItemsByCategory extends StatefulWidget {
-  final String category;
-  ItemsByCategory({this.category});
+  final int categoryId;
+  final String categoryName;
+  ItemsByCategory({this.categoryId, this.categoryName});
 
   @override
   _ItemsByCategoryState createState() => _ItemsByCategoryState();
@@ -13,24 +16,32 @@ class ItemsByCategory extends StatefulWidget {
 class _ItemsByCategoryState extends State<ItemsByCategory> {
   List<Item> _itemList = List<Item>();
   ItemService _itemService = ItemService();
+  int itemId;
+  String itemBarcode;
+  String itemCategory;
+  String itemName;
 
   @override
   void initState() {
     super.initState();
-    getItemsByCategories();
+    getItemsByCategoryId();
   }
 
-  getItemsByCategories() async {
-    var items = await _itemService.readitemsByCategory(this.widget.category);
+  getItemsByCategoryId() async {
+    var items = await _itemService.readItemsById(widget.categoryId);
     items.forEach((item) {
       setState(() {
         var model = Item();
+        model.id = item['id'];
         model.name = item['name'];
         model.barcode = item['barcode'];
         model.quantity = item['quantity'];
         model.sellPrice = item['sellPrice'];
 
         _itemList.add(model);
+        itemId = model.id;
+        itemName = model.name;        
+        itemBarcode = model.barcode;
       });
     });
   }
@@ -39,7 +50,7 @@ class _ItemsByCategoryState extends State<ItemsByCategory> {
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(
-        title: Text(this.widget.category),
+        title: Text(this.widget.categoryName),
       ),
       body: Column(
         children: [
@@ -53,14 +64,28 @@ class _ItemsByCategoryState extends State<ItemsByCategory> {
                   child: Card(
                     elevation: 3,
                     child: ListTile(
+                      onTap: () {
+                        Navigator.push(
+                            context,
+                            MaterialPageRoute(
+                                builder: (context) => ItemDetailsScreen(
+                                      itemId: itemId,
+                                      itemBarcode: itemBarcode,
+                                      itemCategory: widget.categoryName,
+                                      itemName: itemName,
+                                    )));
+                      },
                       title: Row(
                         mainAxisAlignment: MainAxisAlignment.spaceBetween,
                         children: [
-                          Text(_itemList[index].name),
+                          Text(
+                              '${_itemList[index].name != null ? _itemList[index].name : 'No Name'} '),
                         ],
                       ),
-                      subtitle: Text(_itemList[index].barcode),
-                      trailing: Text('PHP ${_itemList[index].sellPrice.toString()}0'),
+                      subtitle: Text(
+                          '${_itemList[index].barcode != null ? _itemList[index].barcode : 'No Barcode'}'),
+                      trailing:
+                          Text('PHP ${_itemList[index].sellPrice.toString()}0'),
                     ),
                   ),
                 );

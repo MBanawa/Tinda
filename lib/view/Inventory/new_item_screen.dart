@@ -3,13 +3,13 @@ import 'package:image_picker/image_picker.dart';
 import 'package:path_provider/path_provider.dart' as pPath;
 import 'package:intl/intl.dart';
 import 'package:path/path.dart' as pathx;
-import 'dart:async';
 import 'dart:io';
 import 'package:provider/provider.dart';
 
 import 'package:tinda/model/items.dart';
 import 'package:tinda/model/picture.dart';
 import 'package:tinda/service/item_service.dart';
+import 'package:tinda/view/inventory_page.dart';
 import 'package:tinda/widgets/pictures_provider.dart';
 
 class ItemScreen extends StatefulWidget {
@@ -21,21 +21,19 @@ class ItemScreen extends StatefulWidget {
 
   @override
   _ItemScreenState createState() =>
-      _ItemScreenState(barcode: barcode, category: category);
+      _ItemScreenState();
 }
 
 class _ItemScreenState extends State<ItemScreen> {
-  String barcode;
-  String category;
-  _ItemScreenState({this.barcode, this.category});
-
+  
+  ListCategories listCategories = ListCategories();
   var _itemNameController = TextEditingController();
   var _itemQuantityController = TextEditingController();
   var _itemBuyDateController = TextEditingController();
   var _itemSupplierController = TextEditingController();
   var _itemBuyPriceController = TextEditingController();
   var _itemSellPriceController = TextEditingController();
-  var _itemImageController = TextEditingController();
+  // var _itemImageController = TextEditingController();
 
   FocusNode focusNode = FocusNode();
   String hintText = 'Enter item name here';
@@ -152,6 +150,42 @@ class _ItemScreenState extends State<ItemScreen> {
     return Scaffold(
       appBar: AppBar(
         title: Text('Create a New Item'),
+        actions: [
+          IconButton(
+              iconSize: 35,
+              icon: Icon(Icons.save),
+              onPressed: () async {
+                var itemObject = Item();
+                itemObject.createdDate = DateTime.now().toString();
+                itemObject.barcode = widget.barcode;
+                itemObject.name = _itemNameController.text;
+                itemObject.category = widget.category;
+                itemObject.quantity = int.parse(_itemQuantityController.text);
+                itemObject.buyDate = _itemBuyDateController.text;
+                itemObject.supplier = _itemSupplierController.text;
+                itemObject.buyPrice =
+                    double.parse(_itemBuyPriceController.text);
+                itemObject.sellPrice =
+                    double.parse(_itemSellPriceController.text);
+                // itemObject.image = null;
+
+                var _itemService = ItemService();
+                var result = await _itemService.saveItem(itemObject);
+                if (result > 0) {
+                  Navigator.pop(context, 'itemsaved');
+                }
+
+                print(DateTime.now().toString());
+                print(widget.barcode);
+                print(_itemNameController.text);
+                print(widget.category);
+                print(int.parse(_itemQuantityController.text));
+                print(_itemBuyDateController.text);
+                print(_itemSupplierController.text);
+                print(double.parse(_itemBuyPriceController.text));
+                print(double.parse(_itemSellPriceController.text));
+              }),
+        ],
       ),
       body: Column(
         crossAxisAlignment: CrossAxisAlignment.stretch,
@@ -172,14 +206,12 @@ class _ItemScreenState extends State<ItemScreen> {
                           onTap: () {
                             _showPicker(context);
                           },
-                          child: CircleAvatar(
-                            backgroundColor: Colors.teal,
-                            radius: 70.0,
+                          child: Container(
+                            height: 100,
                             child: _image != null
-                                ? ClipRRect(
-                                    borderRadius: BorderRadius.circular(70.0),
-                                    child:
-                                        Image.file(_image, fit: BoxFit.contain),
+                                ? CircleAvatar(
+                                    backgroundColor: Colors.teal,
+                                    child: Image.file(_image),
                                   )
                                 : Container(
                                     child: Icon(
@@ -196,12 +228,12 @@ class _ItemScreenState extends State<ItemScreen> {
                       mainAxisAlignment: MainAxisAlignment.spaceBetween,
                       children: [
                         Text(
-                          'Category: $category',
+                          'Category: $widget.category',
                           style: TextStyle(color: Colors.grey.shade700),
                         ),
                         Text(
-                          barcode != null
-                              ? 'Barcode: $barcode'
+                          widget.barcode != null
+                              ? 'Barcode: $widget.barcode'
                               : 'Barcode: Empty',
                           style: TextStyle(color: Colors.grey.shade700),
                         ),
@@ -272,52 +304,6 @@ class _ItemScreenState extends State<ItemScreen> {
               ),
             ),
           ),
-          GestureDetector(
-            onTap: () async {
-              var itemObject = Item();
-              itemObject.createdDate = DateTime.now().toString();
-              itemObject.barcode = barcode;
-              itemObject.name = _itemNameController.text;
-              itemObject.category = category;
-              itemObject.quantity = int.parse(_itemQuantityController.text);
-              itemObject.buyDate = _itemBuyDateController.text;
-              itemObject.supplier = _itemSupplierController.text;
-              itemObject.buyPrice = double.parse(_itemBuyPriceController.text);
-              itemObject.sellPrice = double.parse(_itemSellPriceController.text);
-              // itemObject.image = null;
-
-              var _itemService = ItemService();
-              var result = await _itemService.saveItem(itemObject);
-              if (result > 0 ) {
-                Navigator.pop(context, 'itemsaved');
-              }
-
-              print(DateTime.now().toString());
-              print(barcode);
-              print(_itemNameController.text);
-              print(category);
-              print(int.parse(_itemQuantityController.text));
-              print(_itemBuyDateController.text);
-              print(_itemSupplierController.text);
-              print(double.parse(_itemBuyPriceController.text));
-              print(double.parse(_itemSellPriceController.text));
-            },
-            child: Container(
-              color: Colors.teal,
-              width: double.infinity,
-              height: 50.0,
-              child: Center(
-                child: Text(
-                  'Save',
-                  style: TextStyle(
-                    fontSize: 25.0,
-                    fontWeight: FontWeight.bold,
-                    color: Colors.white,
-                  ),
-                ),
-              ),
-            ),
-          )
         ],
       ),
     );

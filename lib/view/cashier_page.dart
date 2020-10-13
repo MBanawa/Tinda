@@ -1,5 +1,5 @@
 import 'package:flutter/material.dart';
-import 'package:tinda/view/Inventory/new_category_screen.dart';
+
 
 class ShowCashier extends StatefulWidget {
   @override
@@ -16,22 +16,7 @@ class _ShowCashierState extends State<ShowCashier> {
     
   }
 
-  void sizeAdjuster() {
-    var mediaQuery = MediaQuery.of(context).size.height *
-        MediaQuery.of(context).devicePixelRatio;
-    if (mediaQuery >= 2040) {
-      sizedBoxSize = 20;
-      fontSize = 25;
-    } else if (mediaQuery >= 1794) {
-      sizedBoxSize = 15;
-      fontSize = 20;
-    } else {
-      sizedBoxSize = 10;
-      fontSize = 15;
-    }
-    print(sizedBoxSize);
-    print(fontSize);
-  }
+  
 
   @override
   Widget build(BuildContext context) {
@@ -39,9 +24,9 @@ class _ShowCashierState extends State<ShowCashier> {
       floatingActionButton: FloatingActionButton(
           child: Icon(Icons.add),
           onPressed: () {
-            sizeAdjuster();
-            Navigator.push(
-                context, MaterialPageRoute(builder: (context) => NewCategory(sizedBoxSize: sizedBoxSize, fontSize: fontSize,)));
+           
+            // Navigator.push(
+            //     context, MaterialPageRoute(builder: (context) => ItemDetailsScreen()));
           }),
       appBar: AppBar(
         leading: Icon(

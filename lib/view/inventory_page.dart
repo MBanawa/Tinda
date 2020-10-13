@@ -4,11 +4,12 @@ import 'package:flutter/services.dart';
 import 'package:flutter_barcode_scanner/flutter_barcode_scanner.dart';
 import 'package:flutter_colorpicker/flutter_colorpicker.dart';
 
-import 'package:tinda/Model/categories.dart';
 import 'package:tinda/Service/category_service.dart';
 import 'package:tinda/Widgets/Inventory.dart';
+import 'package:tinda/model/categories.dart';
 import 'package:tinda/view/Inventory/new_item_screen.dart';
 import 'package:tinda/view/Inventory/items_by_category.dart';
+import 'package:tinda/view/Inventory/new_category_screen.dart';
 import 'package:tinda/widgets/menu_item.dart';
 
 class ListCategories extends StatefulWidget {
@@ -20,7 +21,7 @@ class _ListCategoriesState extends State<ListCategories> {
   var _categoryNameController = TextEditingController();
   var _categoryDescriptionController = TextEditingController();
 
-  var _category = Category();
+  var _category = Category;
   var _categoryService = CategoryService();
 
   List<Category> _categoryList = List<Category>();
@@ -32,12 +33,13 @@ class _ListCategoriesState extends State<ListCategories> {
   String selectedItem;
   String _scanBarcode = '';
 
+  double sizedBoxSize;
+  double fontSize;
+
   //~~~~~~~~~~Colorpicker
   Color pickerColor = Color(0xff443a49);
   Color currentColor = Color(0xff443a49);
   int categcolor;
-
-  
 
   // ValueChanged<Color> callback
   void changeColor(Color color) {
@@ -49,16 +51,11 @@ class _ListCategoriesState extends State<ListCategories> {
     });
   }
 
-  
-
   @override
   void initState() {
     super.initState();
     getAllCategories();
-    
   }
-
-  
 
   //~~~~~~~~~~~~~~BARCODE~~~~~~~~~~~~~~~~~~
   Future<void> scanBarcodeNormal() async {
@@ -78,7 +75,11 @@ class _ListCategoriesState extends State<ListCategories> {
     if (!mounted) return;
 
     setState(() {
-      _scanBarcode = barcodeScanRes;
+      if (barcodeScanRes.length < 3) {
+        _scanBarcode = 'No Data';
+      } else {
+        _scanBarcode = barcodeScanRes;
+      }
     });
   }
   //~~~~~~~~~~~~~~BARCODE~~~~~~~~~~~~~~~~~~
@@ -98,7 +99,6 @@ class _ListCategoriesState extends State<ListCategories> {
         _categoryList.add(categoryModel);
       });
     });
-    print(MediaQuery.of(context).size.height * MediaQuery.of(context).devicePixelRatio);
   }
 
   _editCategory(BuildContext context, categoryId) async {
@@ -133,7 +133,7 @@ class _ListCategoriesState extends State<ListCategories> {
                   RaisedButton(
                       child: Text('Scan Barcode Now'),
                       onPressed: () {
-                        Navigator.pop(context, 'Scan');
+                        Navigator.pop(context);
                         scanBarcodeNormal()
                             .then((value) => _selectionDialog(context));
                       }),
@@ -148,7 +148,8 @@ class _ListCategoriesState extends State<ListCategories> {
                   RaisedButton(
                       child: Text('Create item without Barcode'),
                       onPressed: () {
-                        Navigator.pop(context, 'GetCategory');
+                        Navigator.pop(context);
+                        _selectionDialog(context);
                         _scanBarcode = null;
                       }),
                 ],
@@ -177,45 +178,88 @@ class _ListCategoriesState extends State<ListCategories> {
                   ),
                 ),
               ),
-              FlatButton(
-                color: Colors.blue,
-                onPressed: () {
-                  Navigator.pop(context);
-                  Navigator.of(context).push(MaterialPageRoute(
-                      builder: (context) => ItemScreen(
-                            category: _selectedValue,
-                            barcode: _scanBarcode,
-                          )));
-                },
-                child: Text('Continue'),
-              ),
+              _scanBarcode == 'No Data'
+                  ? FlatButton(
+                      color: Colors.grey,
+                      onPressed: () {},
+                      child: Text(
+                        'Continue',
+                        style: TextStyle(color: Colors.white),
+                      ),
+                    )
+                  : FlatButton(
+                      color: Colors.blue,
+                      onPressed: () {
+                        Navigator.pop(context);
+                        Navigator.of(context).push(MaterialPageRoute(
+                            builder: (context) => ItemScreen(
+                                  category: _selectedValue,
+                                  barcode: _scanBarcode,
+                                )));
+                      },
+                      child: Text('Continue'),
+                    ),
             ],
-            title: Text(_scanBarcode != null
-                ? 'Please Select a Category for $_scanBarcode'
-                : 'Please Select a Category'),
-            content: SingleChildScrollView(
-              child: Column(
-                children: [
-                  _dropDownList(),
-                  SizedBox(height: 10.0),
-                  Text(
-                    'OR',
-                    style: TextStyle(
-                      fontWeight: FontWeight.bold,
+            title: Text(_scanBarcode == 'No Data'
+                ? 'No Barcode Data Captured'
+                : 'Please Select a Category ${_scanBarcode != null ? _scanBarcode : 'for this new item'}'),
+            content: _scanBarcode == 'No Data'
+                ? RaisedButton(
+                    onPressed: () {
+                      Navigator.pop(context);
+                      scanBarcodeNormal()
+                          .then((value) => _selectionDialog(context));
+                    },
+                    child: Text('Scan Again'),
+                  )
+                : SingleChildScrollView(
+                    child: Column(
+                      children: [
+                        _dropDownList(),
+                        SizedBox(height: 10.0),
+                        Text(
+                          'OR',
+                          style: TextStyle(
+                            fontWeight: FontWeight.bold,
+                          ),
+                        ),
+                        SizedBox(height: 10.0),
+                        RaisedButton(
+                            child: Text('Create a new Category'),
+                            onPressed: () {
+                              _sizeAdjuster();
+                              Navigator.pop(context, 'NewCategory');
+                              Navigator.push(
+                                  context,
+                                  MaterialPageRoute(
+                                      builder: (context) => NewCategory(
+                                            sizedBoxSize: sizedBoxSize,
+                                            fontSize: fontSize,
+                                            barcode: _scanBarcode,
+                                          ))).then((value) => getAllCategories());
+                            }),
+                      ],
                     ),
                   ),
-                  SizedBox(height: 10.0),
-                  RaisedButton(
-                      child: Text('Create a new Category'),
-                      onPressed: () {
-                        Navigator.pop(context, 'NewCategory');
-                        _newCategoryDialog(context);
-                      }),
-                ],
-              ),
-            ),
           );
         });
+  }
+
+  _sizeAdjuster() {
+    var mediaQuery = MediaQuery.of(context).size.height *
+        MediaQuery.of(context).devicePixelRatio;
+    if (mediaQuery >= 2040) {
+      sizedBoxSize = 20;
+      fontSize = 25;
+    } else if (mediaQuery >= 1794) {
+      sizedBoxSize = 15;
+      fontSize = 20;
+    } else {
+      sizedBoxSize = 10;
+      fontSize = 15;
+    }
+    print(sizedBoxSize);
+    print(fontSize);
   }
 
   //pop-up dialog to create new category:
@@ -310,26 +354,26 @@ class _ListCategoriesState extends State<ListCategories> {
                             style: TextStyle(color: Colors.white),
                           ),
                           onPressed: () async {
-                            _category.name = _categoryNameController.text;
-                            _category.description =
-                                _categoryDescriptionController.text;
-                            _category.catcolor = categcolor;
-                            var result = await _categoryService
-                                .saveCategory(_category);
-                            if (result > 0) {
-                              Navigator.pop(context, 'refresh');
-                              getAllCategories();
-                              _categoryNameController.clear();
-                              _categoryDescriptionController.clear();
-                              _showSuccessSnackBar(
-                                Text('Category Successfully Added!'),
-                              );
-                              Navigator.of(context).push(MaterialPageRoute(
-                                  builder: (context) => ItemScreen(
-                                        category: _category.name,
-                                        barcode: _scanBarcode,
-                                      )));
-                            }
+                            // _category.name = _categoryNameController.text;
+                            // _category.description =
+                            //     _categoryDescriptionController.text;
+                            // _category.catcolor = categcolor;
+                            // var result = await _categoryService
+                            //     .saveCategory(_category);
+                            // if (result > 0) {
+                            //   Navigator.pop(context, 'refresh');
+                            //   getAllCategories();
+                            //   _categoryNameController.clear();
+                            //   _categoryDescriptionController.clear();
+                            //   _showSuccessSnackBar(
+                            //     Text('Category Successfully Added!'),
+                            //   );
+                            //   Navigator.of(context).push(MaterialPageRoute(
+                            //       builder: (context) => ItemScreen(
+                            //             category: _category.name,
+                            //             barcode: _scanBarcode,
+                            //           )));
+                            // }
                           },
                         ),
                       ],
@@ -421,19 +465,19 @@ class _ListCategoriesState extends State<ListCategories> {
                 color: Colors.green,
                 child: Text('Update Category'),
                 onPressed: () async {
-                  _category.id = category[0]['id'];
-                  _category.name = _editCategoryNameController.text;
-                  _category.description =
-                      _editCategoryDescriptionController.text;
+                  // _category.id = category[0]['id'];
+                  // _category.name = _editCategoryNameController.text;
+                  // _category.description =
+                  //     _editCategoryDescriptionController.text;
 
-                  var result = await _categoryService.updateCategory(_category);
-                  if (result > 0) {
-                    Navigator.pop(context);
-                    getAllCategories();
-                    _showSuccessSnackBar(
-                      Text('Category Successfully Updated!'),
-                    );
-                  }
+                  // var result = await _categoryService.updateCategory(_category);
+                  // if (result > 0) {
+                  //   Navigator.pop(context);
+                  //   getAllCategories();
+                  //   _showSuccessSnackBar(
+                  //     Text('Category Successfully Updated!'),
+                  //   );
+                  // }
                 },
               ),
             ],
@@ -484,16 +528,11 @@ class _ListCategoriesState extends State<ListCategories> {
     return Scaffold(
       resizeToAvoidBottomInset: false,
       resizeToAvoidBottomPadding: false,
-      
       key: _globalKey,
       floatingActionButton: FloatingActionButton(
         child: Icon(Icons.add),
         onPressed: () {
-          _scanDialog(context).then((value) {
-            if (value == 'GetCategory') {
-              _selectionDialog(context);
-            }
-          });
+          _scanDialog(context);
         },
       ),
       appBar: AppBar(
@@ -515,7 +554,8 @@ class _ListCategoriesState extends State<ListCategories> {
                 onTap: () {
                   Navigator.of(context).push(MaterialPageRoute(
                       builder: (context) => ItemsByCategory(
-                          category: _categoryList[index].name)));
+                          categoryId: _categoryList[index].id,
+                          categoryName: _categoryList[index].name)));
                 },
                 child: Container(
                   child: Stack(
@@ -527,7 +567,9 @@ class _ListCategoriesState extends State<ListCategories> {
                           borderRadius: BorderRadius.only(
                               topLeft: Radius.circular(4),
                               bottomLeft: Radius.circular(4)),
-                          color: Color(_categoryList[index].catcolor == null ? 0xff008080 : _categoryList[index].catcolor),
+                          color: Color(_categoryList[index].catcolor == null
+                              ? 0xff008080
+                              : _categoryList[index].catcolor),
                         ),
                       ),
                       Padding(

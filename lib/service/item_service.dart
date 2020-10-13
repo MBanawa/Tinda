@@ -20,6 +20,11 @@ class ItemService {
     return await _repository.readData('items');
   }
 
+  //read items by id
+  readItemsById(itemId) async {
+    return await _repository.readDataById('items', itemId);
+  }
+
 //Update data from table
   updateItems(Item item) async{
     return await _repository.updateData('items', item.itemMap());
@@ -29,4 +34,13 @@ class ItemService {
   readitemsByCategory(category) async {
     return await _repository.readDataByColumnName('items', 'category', category);
   }
+
+  //delete items
+  deleteItem(itemId) async {
+    return await _repository.deleteData('items', itemId);
+  }
+
+  
 }
+
+

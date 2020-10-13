@@ -1,4 +1,4 @@
-import 'package:tinda/Model/categories.dart';
+import 'package:tinda/model/categories.dart';
 import 'package:tinda/repositories/repository.dart';
 
 class CategoryService {
