@@ -1,6 +1,5 @@
 import 'package:flutter/material.dart';
 import 'package:intl/intl.dart';
-import 'package:tinda/model/items.dart';
 import 'package:tinda/service/item_service.dart';
 
 class ItemDetailsScreen extends StatefulWidget {
