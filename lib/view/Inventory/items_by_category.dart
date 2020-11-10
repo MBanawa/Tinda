@@ -2,7 +2,6 @@ import 'package:flutter/material.dart';
 import 'package:tinda/model/items.dart';
 import 'package:tinda/service/item_service.dart';
 import 'package:tinda/view/Inventory/item_screen.dart';
-import 'package:tinda/view/Inventory/new_item_screen.dart';
 
 class ItemsByCategory extends StatefulWidget {
   final int categoryId;
@@ -40,7 +39,7 @@ class _ItemsByCategoryState extends State<ItemsByCategory> {
 
         _itemList.add(model);
         itemId = model.id;
-        itemName = model.name;        
+        itemName = model.name;
         itemBarcode = model.barcode;
       });
     });

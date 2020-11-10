@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:intl/intl.dart';
+import 'package:tinda/model/items.dart';
 import 'package:tinda/service/item_service.dart';
 
 class ItemDetailsScreen extends StatefulWidget {
@@ -7,19 +8,18 @@ class ItemDetailsScreen extends StatefulWidget {
   final String itemName;
   final String itemCategory;
   final String itemBarcode;
-  
-  ItemDetailsScreen({@required this.itemId, @required this.itemName, @required this.itemCategory, @required this.itemBarcode});
+
+  ItemDetailsScreen(
+      {@required this.itemId,
+      @required this.itemName,
+      @required this.itemCategory,
+      @required this.itemBarcode});
   @override
   _ItemDetailsScreenState createState() => _ItemDetailsScreenState();
 }
 
 class _ItemDetailsScreenState extends State<ItemDetailsScreen> {
-  
-  
   var _itemService = ItemService();
-
-  
-
   var item;
 
   var _editItemNameController = TextEditingController();
@@ -28,28 +28,61 @@ class _ItemDetailsScreenState extends State<ItemDetailsScreen> {
   var _editItemSupplierController = TextEditingController();
   var _editItemBuyPriceController = TextEditingController();
   var _editItemSellPriceController = TextEditingController();
-  // var _editItemImageController = TextEditingController();
-  
+  List<Item> _itemList = List<Item>();
 
   @override
   void initState() {
     super.initState();
     _editItem(context, widget.itemId);
-    
   }
 
   _editItem(BuildContext context, itemId) async {
     item = await _itemService.readItemsById(itemId);
     setState(() {
       _editItemNameController.text = item[0]['name'] ?? 'No Name';
-      _editItemQuantityController.text  = item[0]['quantity'].toString() ?? '0';
+      _editItemQuantityController.text = item[0]['quantity'].toString() ?? '0';
       _editItemBuyDateController.text = item[0]['buyDate'].toString();
-      _editItemSupplierController.text = item[0]['supplier'].toString() ?? 'No Supplier Name';
+      _editItemSupplierController.text =
+          item[0]['supplier'].toString() ?? 'No Supplier Name';
       _editItemBuyPriceController.text = item[0]['buyPrice'].toString() ?? '0';
-      _editItemSellPriceController.text = item[0]['sellPrice'].toString() ?? '0';
-      
-    
+      _editItemSellPriceController.text =
+          item[0]['sellPrice'].toString() ?? '0';
     });
+  }
+
+  _deleteItemDialog(BuildContext context, itemId) {
+    return showDialog(
+        context: context,
+        barrierDismissible: true,
+        builder: (param) {
+          return AlertDialog(
+            actions: [
+              FlatButton(
+                onPressed: () {
+                  Navigator.pop(context);
+                },
+                color: Colors.blue,
+                child: Text('Cancel'),
+              ),
+              FlatButton(
+                color: Colors.red,
+                child: Text('Delete'),
+                onPressed: () async {
+                  var result = await _itemService.deleteItem(itemId);
+                  if (result > 0) {
+                    Navigator.pop(context);
+                  }
+                },
+              ),
+            ],
+            title: Text('Delete Item'),
+            content: Stack(
+              children: [
+                Text('Are you sure you want to delete this Item?'),
+              ],
+            ),
+          );
+        });
   }
 
   DateTime _dateTime = DateTime.now();
@@ -73,10 +106,11 @@ class _ItemDetailsScreenState extends State<ItemDetailsScreen> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      appBar: AppBar(title: Text('${widget.itemName} Details'),),
+      appBar: AppBar(
+        title: Text('${widget.itemName} Details'),
+      ),
       body: Column(
         crossAxisAlignment: CrossAxisAlignment.stretch,
-        // mainAxisAlignment: MainAxisAlignment.spaceBetween,
         children: [
           Expanded(
             flex: 1,
@@ -86,7 +120,6 @@ class _ItemDetailsScreenState extends State<ItemDetailsScreen> {
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
-                    
                     Row(
                       mainAxisAlignment: MainAxisAlignment.spaceBetween,
                       children: [
@@ -102,7 +135,6 @@ class _ItemDetailsScreenState extends State<ItemDetailsScreen> {
                     ),
                     TextFormField(
                       controller: _editItemNameController,
-                      
                       decoration: InputDecoration(
                         labelText: 'Type item name here',
                         hintText: 'What\'s the name of this Item?',
@@ -164,6 +196,13 @@ class _ItemDetailsScreenState extends State<ItemDetailsScreen> {
                 ),
               ),
             ),
+          ),
+          RaisedButton(
+            onPressed: () {
+              _deleteItemDialog(context, widget.itemId)
+                  .then((_) => Navigator.pop(context));
+            },
+            child: Text('delete'),
           ),
         ],
       ),

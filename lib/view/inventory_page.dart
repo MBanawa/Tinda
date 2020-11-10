@@ -2,7 +2,6 @@ import 'package:flutter/material.dart';
 import 'dart:async';
 import 'package:flutter/services.dart';
 import 'package:flutter_barcode_scanner/flutter_barcode_scanner.dart';
-import 'package:flutter_colorpicker/flutter_colorpicker.dart';
 
 import 'package:tinda/Service/category_service.dart';
 import 'package:tinda/Widgets/Inventory.dart';
@@ -18,9 +17,6 @@ class ListCategories extends StatefulWidget {
 }
 
 class _ListCategoriesState extends State<ListCategories> {
-  var _categoryNameController = TextEditingController();
-  var _categoryDescriptionController = TextEditingController();
-
   var _categoryService = CategoryService();
 
   List<Category> _categoryList = List<Category>();
@@ -362,14 +358,14 @@ class _ListCategoriesState extends State<ListCategories> {
         });
   }
 
-  _showSuccessSnackBar(message) {
-    var _snackBar = SnackBar(
-      content: message,
-      backgroundColor: Colors.green.shade700,
-      duration: const Duration(milliseconds: 1000),
-    );
-    _globalKey.currentState.showSnackBar(_snackBar);
-  }
+  // _showSuccessSnackBar(message) {
+  //   var _snackBar = SnackBar(
+  //     content: message,
+  //     backgroundColor: Colors.green.shade700,
+  //     duration: const Duration(milliseconds: 1000),
+  //   );
+  //   _globalKey.currentState.showSnackBar(_snackBar);
+  // }
 
   _showDeleteSnackBar(message) {
     var _snackBar = SnackBar(
