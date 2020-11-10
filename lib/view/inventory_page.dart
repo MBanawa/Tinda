@@ -21,7 +21,6 @@ class _ListCategoriesState extends State<ListCategories> {
   var _categoryNameController = TextEditingController();
   var _categoryDescriptionController = TextEditingController();
 
-  var _category = Category;
   var _categoryService = CategoryService();
 
   List<Category> _categoryList = List<Category>();
@@ -230,13 +229,14 @@ class _ListCategoriesState extends State<ListCategories> {
                               _sizeAdjuster();
                               Navigator.pop(context, 'NewCategory');
                               Navigator.push(
-                                  context,
-                                  MaterialPageRoute(
-                                      builder: (context) => NewCategory(
-                                            sizedBoxSize: sizedBoxSize,
-                                            fontSize: fontSize,
-                                            barcode: _scanBarcode,
-                                          ))).then((value) => getAllCategories());
+                                      context,
+                                      MaterialPageRoute(
+                                          builder: (context) => NewCategory(
+                                                sizedBoxSize: sizedBoxSize,
+                                                fontSize: fontSize,
+                                                barcode: _scanBarcode,
+                                              )))
+                                  .then((value) => getAllCategories());
                             }),
                       ],
                     ),
@@ -261,149 +261,6 @@ class _ListCategoriesState extends State<ListCategories> {
     print(sizedBoxSize);
     print(fontSize);
   }
-
-  //pop-up dialog to create new category:
-  _newCategoryDialog(BuildContext context) {
-    return showDialog(
-        context: context,
-        barrierDismissible: true,
-        builder: (param) {
-          return AlertDialog(
-            contentPadding: EdgeInsets.only(bottom: 5.0),
-            content: Container(
-              width: MediaQuery.of(context).size.width + 50,
-              child: Column(
-                mainAxisAlignment: MainAxisAlignment.start,
-                crossAxisAlignment: CrossAxisAlignment.stretch,
-                mainAxisSize: MainAxisSize.min,
-                children: [
-                  Container(
-                    padding: EdgeInsets.all(12),
-                    decoration: BoxDecoration(
-                      color: Colors.teal,
-                      borderRadius: BorderRadius.only(
-                          topLeft: Radius.circular(4.0),
-                          topRight: Radius.circular(4.0)),
-                    ),
-                    child: Row(
-                      children: [
-                        Text(
-                          'Create New Category',
-                          style: TextStyle(
-                            color: Colors.white,
-                            fontWeight: FontWeight.bold,
-                          ),
-                        ),
-                      ],
-                    ),
-                  ),
-                  TextField(
-                    textInputAction: TextInputAction.next,
-                    controller: _categoryNameController,
-                    onSubmitted: (_) => FocusScope.of(context).nextFocus(),
-                    decoration: InputDecoration(
-                      hintText: 'Write a Category',
-                      labelText: 'Category',
-                    ),
-                  ),
-                  TextField(
-                    textInputAction: TextInputAction.next,
-                    controller: _categoryDescriptionController,
-                    onSubmitted: (_) => FocusScope.of(context).nextFocus(),
-                    decoration: InputDecoration(
-                      hintText: 'Write a Description',
-                      labelText: 'Description',
-                    ),
-                  ),
-                  SizedBox(
-                    height: 12,
-                  ),
-                  Text(
-                    'Select a Color for your Category',
-                    style: TextStyle(color: Colors.grey.shade600),
-                  ),
-                  Expanded(
-                    flex: 1,
-                    child: Container(
-                      child: BlockPicker(
-                        pickerColor: pickerColor,
-                        onColorChanged: changeColor,
-                      ),
-                    ),
-                  ),
-                  Padding(
-                    padding: const EdgeInsets.all(8.0),
-                    child: Row(
-                      mainAxisAlignment: MainAxisAlignment.end,
-                      children: [
-                        FlatButton(
-                          onPressed: () {
-                            Navigator.pop(context);
-                          },
-                          color: Colors.red,
-                          child: Text(
-                            'Cancel',
-                            style: TextStyle(color: Colors.white),
-                          ),
-                        ),
-                        SizedBox(width: 10),
-                        FlatButton(
-                          color: Colors.green,
-                          child: Text(
-                            'Save',
-                            style: TextStyle(color: Colors.white),
-                          ),
-                          onPressed: () async {
-                            // _category.name = _categoryNameController.text;
-                            // _category.description =
-                            //     _categoryDescriptionController.text;
-                            // _category.catcolor = categcolor;
-                            // var result = await _categoryService
-                            //     .saveCategory(_category);
-                            // if (result > 0) {
-                            //   Navigator.pop(context, 'refresh');
-                            //   getAllCategories();
-                            //   _categoryNameController.clear();
-                            //   _categoryDescriptionController.clear();
-                            //   _showSuccessSnackBar(
-                            //     Text('Category Successfully Added!'),
-                            //   );
-                            //   Navigator.of(context).push(MaterialPageRoute(
-                            //       builder: (context) => ItemScreen(
-                            //             category: _category.name,
-                            //             barcode: _scanBarcode,
-                            //           )));
-                            // }
-                          },
-                        ),
-                      ],
-                    ),
-                  ),
-                ],
-              ),
-            ),
-          );
-        });
-  }
-
-  // _temporaryDialog(BuildContext context) {
-  //   return showDialog(
-  //       context: context,
-  //       barrierDismissible: true,
-  //       builder: (param) {
-  //         return AlertDialog(
-  //           title: Text('Scan Result'),
-  //           content: Stack(
-
-  //             children: [
-  //               Text(_scanBarcode),
-  //             ],
-
-  //           ),
-
-  //         );
-  //       });
-  // }
 
   _deleteCategoryDialog(BuildContext context, categoryId) {
     return showDialog(

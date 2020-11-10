@@ -1,31 +1,21 @@
 import 'package:flutter/material.dart';
-import 'package:image_picker/image_picker.dart';
-import 'package:path_provider/path_provider.dart' as pPath;
 import 'package:intl/intl.dart';
-import 'package:path/path.dart' as pathx;
-import 'dart:io';
-import 'package:provider/provider.dart';
 
 import 'package:tinda/model/items.dart';
-import 'package:tinda/model/picture.dart';
 import 'package:tinda/service/item_service.dart';
 import 'package:tinda/view/inventory_page.dart';
-import 'package:tinda/widgets/pictures_provider.dart';
 
 class ItemScreen extends StatefulWidget {
-  // final Item item;
   final String category;
   final String barcode;
 
   ItemScreen({@required this.category, this.barcode});
 
   @override
-  _ItemScreenState createState() =>
-      _ItemScreenState();
+  _ItemScreenState createState() => _ItemScreenState();
 }
 
 class _ItemScreenState extends State<ItemScreen> {
-  
   ListCategories listCategories = ListCategories();
   var _itemNameController = TextEditingController();
   var _itemQuantityController = TextEditingController();
@@ -33,7 +23,6 @@ class _ItemScreenState extends State<ItemScreen> {
   var _itemSupplierController = TextEditingController();
   var _itemBuyPriceController = TextEditingController();
   var _itemSellPriceController = TextEditingController();
-  // var _itemImageController = TextEditingController();
 
   FocusNode focusNode = FocusNode();
   String hintText = 'Enter item name here';
@@ -68,81 +57,6 @@ class _ItemScreenState extends State<ItemScreen> {
             DateFormat('dd-MMM-yyyy').format(_pickedDate);
       });
     }
-  }
-
-  File _image;
-  final _picker = ImagePicker();
-
-  void getImage() async {
-    final pickedFile = await _picker.getImage(source: ImageSource.camera);
-
-    setState(() {
-      if (pickedFile != null) {
-        _image = File(pickedFile.path);
-        print(pickedFile.path);
-      } else {
-        print('No image selected.');
-      }
-    });
-    pathSave();
-  }
-
-  void getImageGallery() async {
-    final pickedFile = await _picker.getImage(source: ImageSource.gallery);
-
-    setState(() {
-      if (pickedFile != null) {
-        _image = File(pickedFile.path);
-      } else {
-        print('No image selected.');
-      }
-    });
-    pathSave();
-  }
-
-  void pathSave() async {
-    final appDir = await pPath.getApplicationDocumentsDirectory();
-    final fileName = pathx.basename(_image.path);
-    final savedImage = await _image.copy('${appDir.path}/$fileName');
-
-    var _imageToStore = Picture(picName: savedImage);
-    _storeImage() {
-      Provider.of<Pictures>(context, listen: false).storeImage(_imageToStore);
-    }
-
-    _storeImage();
-  }
-
-  void _showPicker(context) {
-    showModalBottomSheet(
-      context: context,
-      builder: (BuildContext bc) {
-        return SafeArea(
-          child: Container(
-            child: Wrap(
-              children: <Widget>[
-                ListTile(
-                  leading: Icon(Icons.photo_library),
-                  title: Text('Photo Library'),
-                  onTap: () {
-                    getImageGallery();
-                    Navigator.pop(context, 'gallery');
-                  },
-                ),
-                ListTile(
-                  leading: Icon(Icons.camera),
-                  title: Text('Camera'),
-                  onTap: () {
-                    getImage();
-                    Navigator.pop(context, 'camera');
-                  },
-                ),
-              ],
-            ),
-          ),
-        );
-      },
-    );
   }
 
   @override
@@ -199,41 +113,16 @@ class _ItemScreenState extends State<ItemScreen> {
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
-                    Padding(
-                      padding: const EdgeInsets.all(8.0),
-                      child: Center(
-                        child: GestureDetector(
-                          onTap: () {
-                            _showPicker(context);
-                          },
-                          child: Container(
-                            height: 100,
-                            child: _image != null
-                                ? CircleAvatar(
-                                    backgroundColor: Colors.teal,
-                                    child: Image.file(_image),
-                                  )
-                                : Container(
-                                    child: Icon(
-                                      Icons.camera_alt,
-                                      color: Colors.white,
-                                      size: 50.0,
-                                    ),
-                                  ),
-                          ),
-                        ),
-                      ),
-                    ),
                     Row(
                       mainAxisAlignment: MainAxisAlignment.spaceBetween,
                       children: [
                         Text(
-                          'Category: $widget.category',
+                          'Category: ${widget.category}',
                           style: TextStyle(color: Colors.grey.shade700),
                         ),
                         Text(
                           widget.barcode != null
-                              ? 'Barcode: $widget.barcode'
+                              ? 'Barcode: ${widget.barcode}'
                               : 'Barcode: Empty',
                           style: TextStyle(color: Colors.grey.shade700),
                         ),

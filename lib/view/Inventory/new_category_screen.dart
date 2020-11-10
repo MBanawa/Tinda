@@ -21,7 +21,8 @@ class _NewCategoryState extends State<NewCategory> {
   var _category = Category();
   var _categoryService = CategoryService();
   var category;
-  List<Category> _categoryList = List<Category>();
+  var _nameValue = 'Category Name';
+  var _descValue = 'Category short description';
 
   @override
   void initState() {
@@ -158,9 +159,7 @@ class _NewCategoryState extends State<NewCategory> {
                         splashColor: Colors.teal.withAlpha(80),
                         onTap: () {},
                         child: Container(
-                          
                           child: Stack(
-                            
                             children: <Widget>[
                               Container(
                                 width: 6,
@@ -188,14 +187,14 @@ class _NewCategoryState extends State<NewCategory> {
                                             CrossAxisAlignment.start,
                                         children: [
                                           Text(
-                                            'Category Name',
+                                            _nameValue,
                                             style: TextStyle(
                                               fontSize: 22.0,
                                               color: Colors.teal.shade800,
                                             ),
                                           ),
                                           Text(
-                                            'Category short description',
+                                            _descValue,
                                             style: TextStyle(
                                               fontSize: 12.0,
                                               color: Colors.orange.shade400,
@@ -217,20 +216,28 @@ class _NewCategoryState extends State<NewCategory> {
                       padding: const EdgeInsets.only(top: 30),
                       child: Container(
                         decoration: BoxDecoration(
-                          boxShadow: [BoxShadow(color: Colors.grey.shade400, blurRadius: 10.0, spreadRadius: 2)],
-                          borderRadius: BorderRadius.all(
-                              Radius.circular(20)),
+                          boxShadow: [
+                            BoxShadow(
+                                color: Colors.grey.shade400,
+                                blurRadius: 10.0,
+                                spreadRadius: 2)
+                          ],
+                          borderRadius: BorderRadius.all(Radius.circular(20)),
                           color: Colors.white,
                         ),
                         height: MediaQuery.of(context).size.height / 1.4,
                         padding: const EdgeInsets.fromLTRB(15.0, 50, 15.0, 0),
                         child: Column(
-                          
                           children: [
                             Container(
                               child: TextField(
                                 style: TextStyle(fontSize: widget.fontSize),
                                 controller: _categoryNameController,
+                                onChanged: (value) {
+                                  setState(() {
+                                    _nameValue = value;
+                                  });
+                                },
                                 decoration: InputDecoration(
                                   hintText: 'Enter category name',
                                   hintStyle: TextStyle(
@@ -247,6 +254,11 @@ class _NewCategoryState extends State<NewCategory> {
                               child: TextField(
                                 style: TextStyle(fontSize: widget.fontSize),
                                 controller: _categoryDescriptionController,
+                                onChanged: (value) {
+                                  setState(() {
+                                    _descValue = value;
+                                  });
+                                },
                                 decoration: InputDecoration(
                                   hintText: 'Enter a short description..',
                                   hintStyle: TextStyle(
